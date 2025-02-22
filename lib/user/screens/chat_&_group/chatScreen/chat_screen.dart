@@ -68,8 +68,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen>
     final chatJson = json.encode(chats.map((chat) {
       return {
         ...chat,
-        'latestMessage':
-            VigenereCipher.encrypt(chat['latestMessage']), // Encrypt
         'latestMessageTime': chat['latestMessageTime'].toIso8601String(),
       };
     }).toList());
@@ -84,8 +82,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen>
       return decodedChats.map((chat) {
         return {
           ...Map<String, dynamic>.from(chat),
-          'latestMessage':
-              VigenereCipher.decrypt(chat['latestMessage']), // Decrypt
           'latestMessageTime': DateTime.parse(chat['latestMessageTime']),
         };
       }).toList();
@@ -128,17 +124,15 @@ class ChatHomeScreenState extends State<ChatHomeScreen>
           final latestMessageTime =
               chatData['latestMessageTime']?.toDate() ?? DateTime.now();
 
-          // Encrypt the latest message
-          final latestMessage = chatData['latestMessage'] ?? 'No messages yet';
-          final encryptedMessage = VigenereCipher.encrypt(latestMessage);
-
           return {
             'userId': otherUserId,
             'chatRoomId': chatDoc.id,
             'username': userData?['username'] ?? 'Unknown User',
             'userimage':
                 userData?['userimage'] ?? 'https://via.placeholder.com/150',
-            'latestMessage': encryptedMessage, // Store the encrypted message
+            'latestMessage': chatData['latestMessage'] != null
+                ? VigenereCipher.decrypt(chatData['latestMessage'])
+                : 'No messages yet',
             'unseenCount': unreadCount,
             'latestMessageTime': latestMessageTime,
           };
@@ -190,11 +184,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen>
         itemCount: filteredChats.length,
         itemBuilder: (context, index) {
           final chat = filteredChats[index];
-
-          // Decrypt the latest message
-          final encryptedMessage = chat['latestMessage'] as String;
-          final decryptedMessage = VigenereCipher.decrypt(encryptedMessage);
-
           return ListTile(
             leading: CachedNetworkImage(
               imageUrl: chat['userimage'],
@@ -216,7 +205,7 @@ class ChatHomeScreenState extends State<ChatHomeScreen>
               style: TextStyle(color: appTheme.textColor),
             ),
             subtitle: Text(
-              decryptedMessage, // Display the decrypted message
+              chat['latestMessage'],
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: appTheme.secondaryTextColor),
             ),

@@ -13,32 +13,35 @@ class ImageCarousel extends StatefulWidget {
 
 class _ImageCarouselState extends State<ImageCarousel> {
   late PageController _pageController;
-  late Timer _timer;
+  Timer? _timer; // Use nullable timer to prevent null reference errors
   int _currentPage = 0;
   bool _isPaused = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _startAutoSwipe();
+    _pageController = PageController(initialPage: _currentPage);
+    if (widget.locationImages.isNotEmpty) {
+      _startAutoSwipe();
+    }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _timer.cancel();
+    _timer?.cancel(); // Safe check before canceling the timer
     super.dispose();
   }
 
   void _startAutoSwipe() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (!_isPaused) {
-        if (_currentPage < widget.locationImages.length - 1) {
-          _currentPage++;
-        } else {
-          _currentPage = 0;
-        }
+      if (!_isPaused &&
+          _pageController.hasClients &&
+          widget.locationImages.isNotEmpty) {
+        int nextPage = (_currentPage + 1) % widget.locationImages.length;
+        setState(() {
+          _currentPage = nextPage;
+        });
 
         _pageController.animateToPage(
           _currentPage,
@@ -56,9 +59,11 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 
   void _resumeAutoSwipe() {
-    setState(() {
-      _isPaused = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isPaused = false;
+      });
+    }
   }
 
   void _showImageDialog(String imageUrl) {
@@ -108,6 +113,21 @@ class _ImageCarouselState extends State<ImageCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.locationImages.isEmpty) {
+      return Container(
+        height: 250.0,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        child: const Text(
+          "No Images Available",
+          style: TextStyle(fontSize: 16, color: Colors.black54),
+        ),
+      );
+    }
+
     return Stack(
       children: [
         Container(
@@ -126,10 +146,13 @@ class _ImageCarouselState extends State<ImageCarousel> {
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () => _showImageDialog(widget.locationImages[index]),
-                    child: Image(
-                      image: CachedNetworkImageProvider(
-                          widget.locationImages[index]),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.locationImages[index],
                       fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error, color: Colors.red),
                     ),
                   );
                 },
