@@ -1174,7 +1174,7 @@ class HomePageState extends State<HomePage> {
                                                           BorderRadius.circular(
                                                               8.0),
                                                     ),
-                                                    child: Text(
+                                                    child: const Text(
                                                       'Completed',
                                                       style: TextStyle(
                                                         fontSize: 14,

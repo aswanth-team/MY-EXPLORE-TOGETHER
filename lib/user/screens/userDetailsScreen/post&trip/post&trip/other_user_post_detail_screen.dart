@@ -194,6 +194,12 @@ class _OtherUserPostDetailScreenState extends State<OtherUserPostDetailScreen> {
             final visitedPalaces = postData['visitedPlaces'] ?? [];
             final planToVisitPlaces = postData['planToVisitPlaces'];
             final tripCompletedDuration = postData['tripCompletedDuration'];
+            final uploadTime = postData['uploadedDateTime'] != null
+                ? (postData['uploadedDateTime'] as Timestamp).toDate()
+                : null;
+
+            final formattedUploadTime =
+                uploadTime != null ? formatTimestamp(uploadTime) : "N/A";
 
             return Stack(
               children: [
@@ -283,7 +289,7 @@ class _OtherUserPostDetailScreenState extends State<OtherUserPostDetailScreen> {
                               )
                           ],
                         ),
-                        const SizedBox(height: 16.0),
+                        const SizedBox(height: 8.0),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -292,6 +298,15 @@ class _OtherUserPostDetailScreenState extends State<OtherUserPostDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+                                if (uploadTime != null)
+                                  Text(
+                                    'Posted at $formattedUploadTime',
+                                    style: TextStyle(
+                                      fontSize: 14.0,
+                                      color: appTheme.secondaryTextColor,
+                                    ),
+                                  ),
+                                const SizedBox(height: 8.0),
                                 Text(
                                   'Trip to $locationName ',
                                   style: TextStyle(
