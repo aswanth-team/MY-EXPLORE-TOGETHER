@@ -36,7 +36,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
             children: [
               if (!(post['tripCompleted'] ?? false))
                 ListTile(
-                  leading: Icon(
+                  leading: const Icon(
                     Icons.check_circle_outline,
                     color: Colors.green,
                   ),
@@ -57,7 +57,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                   },
                 ),
               ListTile(
-                leading: Icon(
+                leading: const Icon(
                   Icons.delete_outline,
                   color: Colors.red,
                 ),
@@ -118,8 +118,8 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: 50),
-                    Text('🚫', style: TextStyle(fontSize: 50)),
+                    const SizedBox(height: 50),
+                    const Text('🚫', style: TextStyle(fontSize: 50)),
                     Text(
                       'No posts available',
                       style: TextStyle(color: appTheme.textColor),
@@ -188,8 +188,9 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                                     Center(
                                       child: Text(
                                         post['locationName'] != null &&
-                                                post['locationName']!.length > 8
-                                            ? '${post['locationName']!.substring(0, 14)}...'
+                                                post['locationName']!.length >
+                                                    10
+                                            ? '${post['locationName']!.substring(0, 10)}...'
                                             : post['locationName'] ?? 'Unknown',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -211,7 +212,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                                             borderRadius:
                                                 BorderRadius.circular(8.0),
                                           ),
-                                          child: Text(
+                                          child: const Text(
                                             'Completed',
                                             style: TextStyle(
                                               fontSize: 6,
@@ -231,7 +232,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                           top: 4,
                           right: 4,
                           child: IconButton(
-                            icon: Icon(Icons.more_vert),
+                            icon: const Icon(Icons.more_vert),
                             onPressed: () => showPostOptions(context, post),
                           ),
                         ),

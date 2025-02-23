@@ -290,43 +290,56 @@ class HomePageState extends State<HomePage> {
           .where('userid', isNotEqualTo: currentUserId)
           .get();
 
-      List<Map<String, dynamic>> scoredPosts = querySnapshot.docs.map((doc) {
-        final post = doc.data();
-        final userId = post['userid'] as String;
-        int score = 0;
+      // Use a Set to track unique post IDs
+      final Set<String> processedPostIds = {};
+      List<Map<String, dynamic>> scoredPosts = [];
 
-        final locationName =
-            (post['locationName'] as String?)?.toLowerCase() ?? '';
-        final visitedPlaces = (post['visitedPlaces'] as List?)
-                ?.map((place) => place.toString().toLowerCase())
-                .toList() ??
-            [];
-        final plannedPlaces = (post['planToVisitPlaces'] as List?)
-                ?.map((place) => place.toString().toLowerCase())
-                .toList() ??
-            [];
+      // Only process posts that haven't been seen yet
+      for (var doc in querySnapshot.docs) {
+        if (!processedPostIds.contains(doc.id)) {
+          processedPostIds.add(doc.id);
+          final post = doc.data();
+          final userId = post['userid'] as String;
+          int score = 0;
 
-        final searchFields = [locationName, ...visitedPlaces, ...plannedPlaces];
+          final locationName =
+              (post['locationName'] as String?)?.toLowerCase() ?? '';
+          final visitedPlaces = (post['visitedPlaces'] as List?)
+                  ?.map((place) => place.toString().toLowerCase())
+                  .toList() ??
+              [];
+          final plannedPlaces = (post['planToVisitPlaces'] as List?)
+                  ?.map((place) => place.toString().toLowerCase())
+                  .toList() ??
+              [];
 
-        for (int i = 0; i < userInterests.length; i++) {
-          final interest = userInterests[i].toString().toLowerCase();
-          final matchScore =
-              searchFields.any((field) => field.contains(interest))
-                  ? (userInterests.length - i) * 10
-                  : 0;
-          score += matchScore;
+          final searchFields = [
+            locationName,
+            ...visitedPlaces,
+            ...plannedPlaces
+          ];
+
+          for (int i = 0; i < userInterests.length; i++) {
+            final interest = userInterests[i].toString().toLowerCase();
+            final matchScore =
+                searchFields.any((field) => field.contains(interest))
+                    ? (userInterests.length - i) * 10
+                    : 0;
+            score += matchScore;
+          }
+
+          if (userBuddies.contains(userId)) {
+            score += 100;
+          }
+
+          scoredPosts.add({
+            'doc': doc,
+            'score': score,
+            'randomTiebreaker': Random().nextDouble()
+          });
         }
+      }
 
-        if (userBuddies.contains(userId)) {
-          score += 100;
-        }
-
-        return {
-          'doc': doc,
-          'score': score,
-          'randomTiebreaker': Random().nextDouble()
-        };
-      }).toList();
       scoredPosts.sort((a, b) {
         int scoreComparison = b['score'].compareTo(a['score']);
         return scoreComparison != 0
@@ -347,39 +360,34 @@ class HomePageState extends State<HomePage> {
       nonPrioritizedPosts.shuffle();
       prioritizedPosts.shuffle();
 
+      // Combine posts ensuring no duplicates
       final List<DocumentSnapshot> combinedPosts = [];
+      int prioritizedIndex = 0;
       int nonPrioritizedIndex = 0;
 
-      for (int i = 0; i < prioritizedPosts.length; i++) {
-        combinedPosts.add(prioritizedPosts[i]);
+      while (combinedPosts.length < 50 &&
+          (prioritizedIndex < prioritizedPosts.length ||
+              nonPrioritizedIndex < nonPrioritizedPosts.length)) {
+        // Add two prioritized posts if available
+        for (int i = 0; i < 2; i++) {
+          if (prioritizedIndex < prioritizedPosts.length &&
+              combinedPosts.length < 50) {
+            combinedPosts.add(prioritizedPosts[prioritizedIndex++]);
+          }
+        }
 
-        if ((i + 1) % 2 == 0 &&
-            nonPrioritizedIndex < nonPrioritizedPosts.length) {
-          combinedPosts.add(nonPrioritizedPosts[nonPrioritizedIndex]);
-          nonPrioritizedIndex++;
+        // Add one non-prioritized post if available
+        if (nonPrioritizedIndex < nonPrioritizedPosts.length &&
+            combinedPosts.length < 50) {
+          combinedPosts.add(nonPrioritizedPosts[nonPrioritizedIndex++]);
         }
       }
 
-      while (nonPrioritizedIndex < nonPrioritizedPosts.length) {
-        combinedPosts.add(nonPrioritizedPosts[nonPrioritizedIndex]);
-        nonPrioritizedIndex++;
-      }
-      List<DocumentSnapshot> limitedPosts = combinedPosts.take(50).toList();
-
-      if (limitedPosts.length < 50) {
-        final additionalPostsQuery = await FirebaseFirestore.instance
-            .collection('post')
-            .where('userid', isNotEqualTo: currentUserId)
-            .limit(50 - limitedPosts.length)
-            .get();
-
-        limitedPosts.addAll(additionalPostsQuery.docs);
-      }
-      await _fetchUsersForPosts(limitedPosts);
+      await _fetchUsersForPosts(combinedPosts);
 
       if (mounted) {
         setState(() {
-          posts = limitedPosts;
+          posts = combinedPosts;
           isLoading = false;
         });
       }

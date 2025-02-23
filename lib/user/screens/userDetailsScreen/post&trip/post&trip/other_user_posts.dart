@@ -45,8 +45,8 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: 50),
-                    Text('🚫', style: TextStyle(fontSize: 50)),
+                    const SizedBox(height: 50),
+                    const Text('🚫', style: TextStyle(fontSize: 50)),
                     Text(
                       'No posts available',
                       style: TextStyle(color: appTheme.textColor),
@@ -115,8 +115,9 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                                     Center(
                                       child: Text(
                                         post['locationName'] != null &&
-                                                post['locationName']!.length > 8
-                                            ? '${post['locationName']!.substring(0, 14)}...'
+                                                post['locationName']!.length >
+                                                    10
+                                            ? '${post['locationName']!.substring(0, 10)}...'
                                             : post['locationName'] ?? 'Unknown',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -138,7 +139,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                                             borderRadius:
                                                 BorderRadius.circular(8.0),
                                           ),
-                                          child: Text(
+                                          child: const Text(
                                             'Completed',
                                             style: TextStyle(
                                               fontSize: 6,

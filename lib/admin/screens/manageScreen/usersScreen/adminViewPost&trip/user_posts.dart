@@ -33,7 +33,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(
+                leading: const Icon(
                   Icons.delete_outline,
                   color: Colors.red,
                 ),
@@ -160,8 +160,9 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                                     Center(
                                       child: Text(
                                         post['locationName'] != null &&
-                                                post['locationName']!.length > 8
-                                            ? '${post['locationName']!.substring(0, 14)}...'
+                                                post['locationName']!.length >
+                                                    10
+                                            ? '${post['locationName']!.substring(0, 10)}...'
                                             : post['locationName'] ?? 'Unknown',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -183,7 +184,7 @@ class UserPostsWidgetState extends State<UserPostsWidget> {
                                             borderRadius:
                                                 BorderRadius.circular(8.0),
                                           ),
-                                          child: Text(
+                                          child: const Text(
                                             'Completed',
                                             style: TextStyle(
                                               fontSize: 6,
